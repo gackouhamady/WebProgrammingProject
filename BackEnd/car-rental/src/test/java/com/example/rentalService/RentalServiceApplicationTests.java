@@ -1,6 +1,6 @@
 package com.example.rentalService;
 
-import com.example.rentalService.web.Car;
+import com.example.rentalService.data.Car;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
