@@ -1,5 +1,4 @@
-package com.example.rentalService.web;
-
+package com.example.rentalService.data;
 
 public class Dates {
 
