@@ -51,5 +51,12 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-         # End
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build -t rentalservice:${{ github.sha }} BackEnd/car-rental
+
+      # Push Docker image
+      - name: Push Docker image
+        run: docker push rentalservice:${{ github.sha }}
+
 
