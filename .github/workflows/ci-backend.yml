@@ -1,5 +1,5 @@
 name: Java CI
-#CI Code fix 2
+
 on:
   push:
     branches:
@@ -26,38 +26,35 @@ jobs:
 
       # Ensure gradlew has execute permissions
       - name: Make gradlew executable
-        run: chmod +x ./BackEnd/car-rental/gradlew
+        run: chmod +x BackEnd/car-rental/gradlew
 
       # Cache Gradle dependencies
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('BackEnd/car-rental/**/*.gradle*', 'BackEnd/car-rental/**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       # Build the project
       - name: Build the project
-        run: ./BackEnd/car-rental/gradlew build
+        working-directory: BackEnd/car-rental
+        run: ./gradlew build
 
       # Run tests
       - name: Run tests
-        run: ./BackEnd/car-rental/gradlew test
-      # Docker images
-      - name: Docker images
-        run : docker build -t rentalservice .
+        working-directory: BackEnd/car-rental
+        run: ./gradlew test
+
+      # Docker login (si nécessaire)
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build -t rentalservice BackEnd/car-rental
+
+      # Push Docker image (si nécessaire)
+      - name: Push Docker image
+        run: docker push rentalservice
