@@ -53,11 +53,11 @@ jobs:
 
       # Build the project
       - name: Build the project
-        run: ./gradlew build
+        run: ./BackEnd/car-rental/gradlew build
 
       # Run tests
       - name: Run tests
-        run: ./gradlew test
+        run: ./BackEnd/car-rental/gradlew test
       # Docker images
       - name: Docker images
         run : docker build -t rentalservice .
