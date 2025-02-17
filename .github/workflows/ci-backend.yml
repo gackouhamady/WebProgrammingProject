@@ -86,8 +86,9 @@ jobs:
           
       - name: Authenticate OCI
         run: |
-          oci session authenticate --profile DEFAULT
+          oci session authenticate --region eu-paris-1 --profile DEFAULT --auth security_token --output-mode non-interactive
           
+    
 
       - name: Test Kubernetes Connection
         run: |
