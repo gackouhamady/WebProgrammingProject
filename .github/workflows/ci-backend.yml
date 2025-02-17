@@ -81,6 +81,7 @@ jobs:
       - name: Deploy to Kubernetes
         run: |
           ls -la
+          cd BackEnd/k8s
           kubectl apply -f car-rental-deployement.yml
 
       - name: Verify Deployment
