@@ -72,11 +72,7 @@ jobs:
           cd BackEnd/k8s  # Revenir au répertoire racine WebProgrammingProject
           echo "Current directory after cd: $(pwd)"  # Affiche le répertoire après le changement
           ls -la  # Liste tous les fichiers et répertoires après le changement
-      
-          cd BackEnd/k8s  # Se rendre dans le répertoire contenant le fichier car-rental-deployement.yml
-          echo "Current directory after moving to BackEnd/k8s: $(pwd)"  # Affiche le répertoire après le changement
-          ls -la  # Liste tous les fichiers et répertoires après le changement
-      
+    
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
           
     
