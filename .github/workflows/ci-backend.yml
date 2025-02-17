@@ -80,7 +80,20 @@ jobs:
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "$HOME/bin" >> $GITHUB_PATH
 
+      - name: Check OCI CLI installation
+        run: |
+          oci --version
+          
+      - name: Authenticate OCI
+        run: |
+          oci session authenticate --profile DEFAULT
+          
 
+      - name: Test Kubernetes Connection
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/kubeconfig.yaml
+          kubectl config view
+          kubectl cluster-info
 
       - name: Use Oracle Kubernetes configuration
         run: |
