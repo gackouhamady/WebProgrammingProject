@@ -84,10 +84,12 @@ jobs:
         run: |
           oci --version
           
-      - name: Authenticate OCI
+      - name: Set up OCI authentication
         run: |
-          oci session authenticate --region eu-paris-1 --profile DEFAULT --auth security_token --output-mode non-interactive
-          
+          export OCI_CLI_AUTH=security_token
+          export OCI_CLI_PROFILE=DEFAULT
+          export OCI_CLI_REGION=eu-paris-1
+    
     
 
       - name: Test Kubernetes Connection
