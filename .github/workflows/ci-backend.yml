@@ -63,10 +63,12 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
           export KUBECONFIG=kubeconfig.yaml
 
-      - name: Replace image in deployment file
+      - name: Show current directory and replace image in deployment file
         run: |
+          echo "Current directory: $(pwd)"  # Affiche le répertoire courant
           cd WebProgrammingProject/BackEnd  # Se rendre dans le répertoire BackEnd
-          sed -i "s|your-docker-registry/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
+          echo "Current directory after cd: $(pwd)"  # Affiche le répertoire après le changement
+          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f BackEnd/car-rental-deployment.yml
