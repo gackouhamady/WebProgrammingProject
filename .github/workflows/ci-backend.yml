@@ -65,7 +65,8 @@ jobs:
 
       - name: Replace image in deployment file
         run: |
-          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" BackEnd/car-rental-deployment.yml
+          cd WebProgrammingProject/BackEnd  # Se rendre dans le répertoire BackEnd
+          sed -i "s|your-docker-registry/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
       - name: Deploy to Kubernetes
         run: kubectl apply -f BackEnd/car-rental-deployment.yml
