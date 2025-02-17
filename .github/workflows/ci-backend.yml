@@ -64,15 +64,14 @@ jobs:
           export KUBECONFIG=kubeconfig.yaml
 
       - name: Show current directory and replace image in deployment file
-        working-directory: WebProgrammingProject/BackEnd
         run: |
           echo "Current directory: $(pwd)"  # Affiche le répertoire courant avant de se déplacer
+          cd WebProgrammingProject/BackEnd/k8s  # Se rendre dans le répertoire contenant le fichier car-rental-deployement.yml
           echo "Current directory after cd: $(pwd)"  # Affiche le répertoire après le changement
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
-    
 
       - name: Deploy to Kubernetes
-        run: kubectl apply -f BackEnd/car-rental-deployment.yml
+        run: kubectl apply -f WebProgrammingProject/BackEnd/k8s/car-rental-deployement.yml
 
       - name: Verify Deployment
         run: kubectl rollout status deployment/rentalservice
