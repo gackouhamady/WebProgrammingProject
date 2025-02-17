@@ -75,14 +75,18 @@ jobs:
     
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
           
-    
-    
 
-      - name: Deploy to Kubernetes
+      - name: Use Oracle Kubernetes configuration
         run: |
-          ls -la
-          cd BackEnd/k8s
-          kubectl apply -f car-rental-deployement.yml
+          export KUBECONFIG=${{ github.workspace }}/kubeconfig.yaml
+          kubectl config get-contexts  # Vérifie si OKE est bien configuré
+          kubectl cluster-info  # Vérifie si le cluster est accessible
+
+      - name: Deploy to Oracle Kubernetes
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/kubeconfig.yaml
+          kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
+
 
       - name: Verify Deployment
         run: kubectl rollout status deployment/rentalservice
