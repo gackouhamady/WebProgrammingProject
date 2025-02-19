@@ -10,29 +10,43 @@ spec:
   selector:
     matchLabels:
       app: rentalservice
-  strategy: {}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: rentalservice
     spec:
       containers:
         - name: rentalservice
-          image: ${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}  # Utilisation du tag dynamique basé sur le SHA de commit
+          image: ${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
-          resources: {}
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
       restartPolicy: Always
-status: {}
 
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
     app: rentalservice
   name: rentalservice
@@ -45,8 +59,6 @@ spec:
   selector:
     app: rentalservice
   type: LoadBalancer
-status:
-  loadBalancer: {}
 
 ---
 
@@ -70,7 +82,7 @@ spec:
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: carservice
+  name: rentalservice
 spec:
   hosts:
     - "*"
@@ -84,6 +96,6 @@ spec:
         uri: /
       route:
         - destination:
+            host: rentalservice.default.svc.cluster.local
             port:
               number: 80
-            host: rentalservice.default.svc.cluster.local

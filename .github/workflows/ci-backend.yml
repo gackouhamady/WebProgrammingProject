@@ -1,4 +1,4 @@
-name: Java CI
+name: Java CI/CD
 
 on:
   push:
@@ -9,54 +9,88 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Java
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
-          distribution: 'temurin' # Specify the Java distribution
+          distribution: 'temurin'
 
-      # Ensure gradlew has execute permissions
       - name: Make gradlew executable
         run: chmod +x BackEnd/car-rental/gradlew
 
-      # Cache Gradle dependencies
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
         with:
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('BackEnd/car-rental/**/*.gradle*', 'BackEnd/car-rental/**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          key: gradle-${{ runner.os }}-${{ hashFiles('BackEnd/car-rental/**/*.gradle*', 'BackEnd/car-rental/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
-      # Build the project
-      - name: Build the project
+      - name: Build and Test
         working-directory: BackEnd/car-rental
-        run: ./gradlew build
+        run: |
+          ./gradlew build
+          ./gradlew test
 
-      # Run tests
-      - name: Run tests
-        working-directory: BackEnd/car-rental
-        run: ./gradlew test
-
-      # Docker login (si nécessaire)
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Build Docker image with a tag that includes the branch and commit SHA
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }} BackEnd/car-rental
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_TAG=${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
+          docker build -t $IMAGE_TAG BackEnd/car-rental
+          docker push $IMAGE_TAG
 
-      # Push Docker image
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | > ~/.kube/config
+          export KUBECONFIG=~/.kube/config
+           
+
+      ###
+      - name: Show current directory and replace image in deployment file
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -la
+          cd BackEnd/k8s
+          echo "Current directory after cd: $(pwd)"
+          ls -la
+          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
 
+      - name: Test Kubernetes Connection
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/.kube/config
+          kubectl config view
+          kubectl cluster-info
+
+  
+
+      - name: Deploy to Oracle Kubernetes
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/.kube/config
+          kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
+
+      - name: Verify Deployment
+        run: kubectl rollout status deployment/rentalservice
+
+      - name: Verify Pods are Running
+        run: kubectl get pods -o wide
