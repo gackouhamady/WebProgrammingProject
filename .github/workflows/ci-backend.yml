@@ -60,6 +60,7 @@ jobs:
 
       - name: Configure kubeconfig for OKE
         run: |
+          ls -la 
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
           export KUBECONFIG=~/.kube/config
@@ -75,6 +76,7 @@ jobs:
 
       - name: Deploy to Oracle Kubernetes (OKE)
         run: |
+          ls -la 
           kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
 
       - name: Verify Deployment
