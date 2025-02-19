@@ -76,13 +76,6 @@ jobs:
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
 
-      - name: Test Kubernetes Connection
-        run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl config view
-          kubectl cluster-info
-
-  
 
       - name: Deploy to Oracle Kubernetes
         run: |
