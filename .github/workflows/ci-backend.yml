@@ -64,7 +64,7 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
           export KUBECONFIG=~/.kube/config
           kubectl config use-context context-c3ibmeixkha
-
+###
       - name: Show current directory and replace image in deployment file
         run: |
           echo "Current directory: $(pwd)"
