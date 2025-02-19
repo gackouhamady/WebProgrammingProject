@@ -58,14 +58,12 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Configure kubeconfig
+      - name: Configure kubeconfig for OKE
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | > ~/.kube/config
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
           export KUBECONFIG=~/.kube/config
-           
 
-      ###
       - name: Show current directory and replace image in deployment file
         run: |
           echo "Current directory: $(pwd)"
@@ -75,11 +73,8 @@ jobs:
           ls -la
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
-
-
-      - name: Deploy to Oracle Kubernetes
+      - name: Deploy to Oracle Kubernetes (OKE)
         run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
           kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
 
       - name: Verify Deployment
