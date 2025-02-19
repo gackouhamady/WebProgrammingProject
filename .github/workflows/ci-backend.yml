@@ -65,6 +65,8 @@ jobs:
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
           export KUBECONFIG=~/.kube/config
 
+        ########
+
       - name: Show current directory and replace image in deployment file
         run: |
           echo "Current directory: $(pwd)"
