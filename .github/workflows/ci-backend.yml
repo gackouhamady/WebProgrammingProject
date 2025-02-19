@@ -46,68 +46,53 @@ jobs:
           docker build -t $IMAGE_TAG BackEnd/car-rental
           docker push $IMAGE_TAG
 
-  deploy:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
 
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          export KUBECONFIG=~/.kube/config
-          kubectl config use-context context-c3ibmeixkha
+    name: Deploy to Oracle Kubernetes
 
-      - name: Show current directory and replace image in deployment file
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          cd BackEnd/k8s
-          echo "Current directory after cd: $(pwd)"
-          ls -la
-          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
+    on:
+      pull_request:
+        branches:
+          - main
 
-      - name: Install OCI CLI
-        run: |
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
-          echo "$HOME/bin" >> $GITHUB_PATH
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
 
-      - name: Check OCI CLI installation
-        run: |
-          oci --version
+        steps:
+          # Checkout le code du repository
+          - name: Checkout repository
+            uses: actions/checkout@v3
 
-      - name: Set up OCI authentication
-        run: |
-          export OCI_CLI_AUTH=security_token
-          export OCI_CLI_PROFILE=DEFAULT
-          export OCI_CLI_REGION=eu-paris-1
+          # Installer kubectl
+          - name: Install kubectl
+            uses: azure/setup-kubectl@v3
+            with:
+              version: 'latest'
 
-      - name: Test Kubernetes Connection
-        run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl config view
-          kubectl cluster-info
+          # Configure kubeconfig avec votre fichier Kubernetes
+          - name: Configure kubeconfig
+            run: |
+              mkdir -p ~/.kube
+              echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+              export KUBECONFIG=~/.kube/config
+              kubectl config use-context context-c3ibmeixkha
 
-      - name: Use Oracle Kubernetes configuration
-        run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl config get-contexts
-          kubectl cluster-info
+          # Test de la connexion au cluster Kubernetes
+          - name: Test Kubernetes Connection
+            run: |
+              kubectl cluster-info
+              kubectl get nodes
 
-      - name: Deploy to Oracle Kubernetes
-        run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
+          # Déployer l'application sur Kubernetes
+          - name: Deploy to Oracle Kubernetes
+            run: |
+              kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
 
-      - name: Verify Deployment
-        run: kubectl rollout status deployment/rentalservice
+          # Vérification du déploiement
+          - name: Verify Deployment
+            run: kubectl rollout status deployment/rentalservice
 
-      - name: Verify Pods are Running
-        run: kubectl get pods -o wide
+          # Vérification des Pods
+          - name: Verify Pods are Running
+            run: kubectl get pods -o wide
