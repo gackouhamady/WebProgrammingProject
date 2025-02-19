@@ -64,8 +64,8 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
           export KUBECONFIG=~/.kube/config
-
-        ########
+          # Vérifier la configuration kubeconfig pour s'assurer que tout est correct
+          kubectl config view --raw
 
       - name: Show current directory and replace image in deployment file
         run: |
@@ -75,6 +75,9 @@ jobs:
           echo "Current directory after cd: $(pwd)"
           ls -la
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
+
+      - name: Verify Kubernetes Cluster Access
+        run: kubectl get nodes
 
       - name: Deploy to Oracle Kubernetes (OKE)
         run: |
