@@ -46,53 +46,50 @@ jobs:
           docker build -t $IMAGE_TAG BackEnd/car-rental
           docker push $IMAGE_TAG
 
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          export KUBECONFIG=~/.kube/config
+          kubectl config use-context context-c3ibmeixkha
+
+      - name: Show current directory and replace image in deployment file
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -la
+          cd BackEnd/k8s
+          echo "Current directory after cd: $(pwd)"
+          ls -la
+          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
 
-    name: Deploy to Oracle Kubernetes
+      - name: Test Kubernetes Connection
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/.kube/config
+          kubectl config view
+          kubectl cluster-info
 
-    on:
-      pull_request:
-        branches:
-          - main
+  
 
-    jobs:
-      deploy:
-        runs-on: ubuntu-latest
+      - name: Deploy to Oracle Kubernetes
+        run: |
+          export KUBECONFIG=${{ github.workspace }}/.kube/config
+          kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
 
-        steps:
-          # Checkout le code du repository
-          - name: Checkout repository
-            uses: actions/checkout@v3
+      - name: Verify Deployment
+        run: kubectl rollout status deployment/rentalservice
 
-          # Installer kubectl
-          - name: Install kubectl
-            uses: azure/setup-kubectl@v3
-            with:
-              version: 'latest'
-
-          # Configure kubeconfig avec votre fichier Kubernetes
-          - name: Configure kubeconfig
-            run: |
-              mkdir -p ~/.kube
-              echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-              export KUBECONFIG=~/.kube/config
-              kubectl config use-context context-c3ibmeixkha
-
-          # Test de la connexion au cluster Kubernetes
-          - name: Test Kubernetes Connection
-            run: |
-              kubectl cluster-info
-              kubectl get nodes
-
-          # Déployer l'application sur Kubernetes
-          - name: Deploy to Oracle Kubernetes
-            run: |
-              kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
-
-          # Vérification du déploiement
-          - name: Verify Deployment
-            run: kubectl rollout status deployment/rentalservice
-
-          # Vérification des Pods
-          - name: Verify Pods are Running
-            run: kubectl get pods -o wide
+      - name: Verify Pods are Running
+        run: kubectl get pods -o wide
