@@ -1,20 +1,71 @@
-name: CI/CD Pipeline for OKE
+name: Java CI/CD for OKE
 
 on:
   push:
     branches:
-      - main  # Déclenchement du pipeline sur la branche principale
+      - test
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout le code source
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Installer OCI CLI
-      - name: Set up OCI CLI
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Make gradlew executable
+        run: chmod +x BackEnd/car-rental/gradlew
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: gradle-${{ runner.os }}-${{ hashFiles('BackEnd/car-rental/**/*.gradle*', 'BackEnd/car-rental/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build and Test
+        working-directory: BackEnd/car-rental
+        run: |
+          ./gradlew build
+          ./gradlew test
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker image to Docker Hub
+        run: |
+          IMAGE_TAG=${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
+          docker build -t $IMAGE_TAG BackEnd/car-rental
+          docker push $IMAGE_TAG
+
+      - name: Login to OCI Registry
+        run: |
+          OCI_REGISTRY_URL="eu-paris-1.ocir.io/axteptc31tuv"
+          echo "${{ secrets.OCI_REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.OCI_REGISTRY_USERNAME }}" --password-stdin $OCI_REGISTRY_URL
+
+      - name: Build and Push Docker image to OCI Registry
+        run: |
+          OCI_IMAGE_TAG="eu-paris-1.ocir.io/axteptc31tuv/my-app:${{ github.sha }}"
+          docker build -t $OCI_IMAGE_TAG .
+          docker push $OCI_IMAGE_TAG
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup OCI CLI
         uses: oracle/oci-cli-action@v1
         with:
           oci_api_key: ${{ secrets.OCI_API_KEY }}
@@ -22,31 +73,13 @@ jobs:
           oci_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
           oci_region: ${{ secrets.OCI_REGION }}
 
-      # Step 3: Configurer le contexte Kubernetes
-      - name: Set up Kubernetes context
+      - name: Configure Kubernetes context
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
 
-      # Step 4: Construire l'image Docker
-      - name: Build Docker image
+      - name: Update Kubernetes deployment
         run: |
-          IMAGE_NAME="eu-paris-1.ocir.io/axteptc31tuv/my-app:$GITHUB_SHA"
-          docker build -t $IMAGE_NAME .
-
-      # Step 5: Se connecter au registre OCI et pousser l'image
-      - name: Push Docker image to OCI Registry
-        run: |
-          OCI_REGISTRY_URL="eu-paris-1.ocir.io/axteptc31tuv"
-          echo "${{ secrets.OCI_REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.OCI_REGISTRY_USERNAME }}" --password-stdin $OCI_REGISTRY_URL
-          docker push $OCI_REGISTRY_URL/my-app:$GITHUB_SHA
-
-      # Step 6: Déployer sur OKE
-      - name: Deploy to OKE
-        run: |
-          kubectl set image deployment/my-deployment my-app=$OCI_REGISTRY_URL/my-app:$GITHUB_SHA
+          export KUBECONFIG=~/.kube/config
+          kubectl set image deployment/my-deployment my-app=eu-paris-1.ocir.io/axteptc31tuv/my-app:${{ github.sha }}
           kubectl rollout status deployment/my-deployment
-
-      # Step 7: Nettoyage
-      - name: Clean up
-        run: docker logout
