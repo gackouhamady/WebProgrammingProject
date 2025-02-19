@@ -53,27 +53,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
+      - name: Set up OCI CLI
+        uses: oracle/oci-cli-action@v1
         with:
-          version: 'latest'
+          oci_api_key: ${{ secrets.OCI_API_KEY }}
+          oci_user_ocid: ${{ secrets.OCI_USER_OCID }}
+          oci_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+          oci_region: ${{ secrets.OCI_REGION }}
 
       - name: Configure kubeconfig for OKE
         run: |
-          ls -la 
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
           export KUBECONFIG=~/.kube/config
-          # Vérifier la configuration kubeconfig pour s'assurer que tout est correct
+          kubectl config use-context oci
           kubectl config view --raw
 
       - name: Show current directory and replace image in deployment file
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
           cd BackEnd/k8s
-          echo "Current directory after cd: $(pwd)"
-          ls -la
           sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
 
       - name: Verify Kubernetes Cluster Access
@@ -81,7 +79,6 @@ jobs:
 
       - name: Deploy to Oracle Kubernetes (OKE)
         run: |
-          ls -la 
           kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
 
       - name: Verify Deployment
