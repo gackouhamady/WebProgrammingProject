@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: rentalservice
-          image: hamadygackou/rentalservice:${{ github.sha }}  # Remplacez par votre registre
+          image: ${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
