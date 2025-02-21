@@ -78,6 +78,13 @@ jobs:
           which oci
           oci --version
 
+      - name: Configure OCI CLI
+        env:
+          OCI_CLI_CONFIG: ${{ secrets.OCI_CLI_CONFIG }}
+        run: |
+          mkdir -p ~/.oci
+          echo "$OCI_CLI_CONFIG" | base64 --decode > ~/.oci/config
+
       - name: Configure Kubernetes context
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
