@@ -56,16 +56,11 @@ jobs:
 
       - name: Set up OCI CLI
         run: |
-          # Installer OCI CLI
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
-          echo "OCI CLI installed"
-          # Ajouter OCI CLI au PATH
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+          echo "OCI CLI installé"
           echo "export PATH=$PATH:$HOME/oci-cli/bin" >> $GITHUB_ENV
 
-      - name: Configure OCI CLI
-        run: |
-          mkdir -p ~/.oci
-          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config  # Assure-toi que les clés API et autres infos sont présentes dans les secrets GitHub
+
 
       - name: Configure Kubernetes context
         run: |
