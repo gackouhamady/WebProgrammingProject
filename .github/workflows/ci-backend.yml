@@ -80,17 +80,16 @@ jobs:
 
       - name: Configure OCI CLI
         env:
-          OCI_CLI_CONFIG: ${{ secrets.OCI_CLI_CONFIG }}
-          OCI_CLI_KEY_FILE: ${{ secrets.OCI_CLI_KEY_FILE }}
-          OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
           OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+          OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
           OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+          OCI_CLI_KEY_FILE: ${{ secrets.OCI_CLI_KEY_FILE }}
         run: |
           mkdir -p ~/.oci
           echo "[DEFAULT]" > ~/.oci/config
           echo "user=${OCI_CLI_USER}" >> ~/.oci/config
           echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> ~/.oci/config
-          echo "key_file=${OCI_CLI_KEY_FILE}" >> ~/.oci/config
+          echo "key_file=$(echo ${OCI_CLI_KEY_FILE} | base64 --decode)" >> ~/.oci/config
           echo "tenancy=${OCI_CLI_TENANCY}" >> ~/.oci/config
           echo "region=eu-paris-1" >> ~/.oci/config
           chmod 600 ~/.oci/config
