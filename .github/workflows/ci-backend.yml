@@ -94,10 +94,6 @@ jobs:
           chmod 600 ~/.kube/config
           export KUBECONFIG=~/.kube/config
 
-      - name: Verify Kubernetes connection
-        run: |
-          kubectl cluster-info || { echo "Kubernetes cluster connection failed"; exit 1; }
-          kubectl get nodes || { echo "Failed to fetch Kubernetes nodes"; exit 1; }
 
       - name: Apply Kubernetes deployment
         run: |
