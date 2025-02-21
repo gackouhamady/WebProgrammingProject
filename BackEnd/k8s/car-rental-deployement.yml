@@ -99,3 +99,4 @@ spec:
             host: rentalservice.default.svc.cluster.local
             port:
               number: 80
+# Fix duplicate

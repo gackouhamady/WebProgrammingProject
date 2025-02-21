@@ -1,9 +1,10 @@
-name: Java CI/CD
+name: Java CI/CD for OKE
 
 on:
   push:
     branches:
       - test
+      - main
   pull_request:
     branches:
       - main
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -34,13 +35,21 @@ jobs:
       - name: Build and Test
         working-directory: BackEnd/car-rental
         run: |
-          ./gradlew build
-          ./gradlew test
+          ./gradlew build --no-daemon --stacktrace
+          ./gradlew test --no-daemon --stacktrace
 
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
+            echo "Docker credentials are missing. Exiting."
+            exit 1
+          fi
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-      - name: Build and Push Docker image
+      - name: Build and Push Docker image to Docker Hub
         run: |
           IMAGE_TAG=${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}
           docker build -t $IMAGE_TAG BackEnd/car-rental
@@ -51,46 +60,72 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
-
-      - name: Configure kubeconfig
+      - name: Install OCI CLI
         run: |
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+          echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
+          source $GITHUB_ENV
+
+      - name: Ajouter OCI CLI au PATH
+        run: echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Vérifier OCI CLI
+        run: |
+          echo "Chemin actuel : $PATH"
+          ls -lah $HOME/bin/
+          which oci
+          oci --version
+
+      - name: Configure OCI CLI
+        env:
+          OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+          OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+          OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+          OCI_CLI_KEY_FILE: ${{ secrets.OCI_CLI_KEY_FILE }}
+        run: |
+          mkdir -p ~/.oci
+          echo "[DEFAULT]" > ~/.oci/config
+          echo "user=${OCI_CLI_USER}" >> ~/.oci/config
+          echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> ~/.oci/config
+          echo "key_file=$(echo ${OCI_CLI_KEY_FILE} | base64 --decode)" > ~/.oci/oci_api_key.pem
+          echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
+          echo "tenancy=${OCI_CLI_TENANCY}" >> ~/.oci/config
+          echo "region=eu-paris-1" >> ~/.oci/config
+          chmod 600 ~/.oci/config
+
+      - name: Repair OCI config file permissions
+        run: |
+          oci setup repair-file-permissions --file /home/runner/.oci/config
+
+      - name: Configure Kubernetes context
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
+        run: |
+          if [ -z "$KUBECONFIG_B64" ]; then
+            echo "Kubeconfig is missing. Exiting."
+            exit 1
+          fi
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | > ~/.kube/config
+          echo "$KUBECONFIG_B64" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
           export KUBECONFIG=~/.kube/config
-           
 
-      ###
-      - name: Show current directory and replace image in deployment file
+      - name: Connect to OCI and configure Kubernetes
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          cd BackEnd/k8s
-          echo "Current directory after cd: $(pwd)"
-          ls -la
-          sed -i "s|hamadygackou/rentalservice:.*|${{ secrets.DOCKER_USERNAME }}/rentalservice:${{ github.sha }}|" car-rental-deployement.yml
+          oci -v
+          mkdir -p $HOME/.kube
+          oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.eu-paris-1.aaaaaaaant6pqv73eslioidw2ccdw25d7za25t3rlieot3ggvc3ibmeixkha --file $HOME/.kube/config --region eu-paris-1 --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+          export KUBECONFIG=$HOME/.kube/config
 
-
-      - name: Test Kubernetes Connection
+      - name: Apply Kubernetes deployment
         run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl config view
-          kubectl cluster-info
+          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
+          kubectl rollout status deployment/car-rental -n default || { echo "Deployment rollout failed"; exit 1; }
+          
+          
+          
+          
 
-  
-
-      - name: Deploy to Oracle Kubernetes
-        run: |
-          export KUBECONFIG=${{ github.workspace }}/.kube/config
-          kubectl apply -f BackEnd/k8s/car-rental-deployement.yml
-
-      - name: Verify Deployment
-        run: kubectl rollout status deployment/rentalservice
-
-      - name: Verify Pods are Running
-        run: kubectl get pods -o wide
+# End  fix
