@@ -35,11 +35,19 @@ jobs:
       - name: Build and Test
         working-directory: BackEnd/car-rental
         run: |
-          ./gradlew build
-          ./gradlew test
+          ./gradlew build --no-daemon --stacktrace
+          ./gradlew test --no-daemon --stacktrace
 
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          if [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
+            echo "Docker credentials are missing. Exiting."
+            exit 1
+          fi
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - name: Build and Push Docker image to Docker Hub
         run: |
@@ -57,28 +65,40 @@ jobs:
       - name: Install OCI CLI
         run: |
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
-          
-      
-
-      # curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
-      #          echo "source \$HOME/.bashrc" >> $GITHUB_ENV
+          echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
+          source $GITHUB_ENV
 
       - name: Configure OCI CLI for Kubernetes access
+        env:
+          OCI_CLUSTER_ID: ${{ secrets.OCI_CLUSTER_ID }}
+          OCI_REGION: "eu-paris-1"
         run: |
-          oci -v
-          oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.eu-paris-1.aaaaaaaant6pqv73eslioidw2ccdw25d7za25t3rlieot3ggvc3ibmeixkha --file $HOME/.kube/config --region eu-paris-1 --token-version 2.0.0  --kube-endpoint PUBLIC_ENDPOINT
-          
-
-
+          if [ -z "$OCI_CLUSTER_ID" ]; then
+            echo "OCI Cluster ID is missing. Exiting."
+            exit 1
+          fi
+          mkdir -p ~/.oci
+          oci ce cluster create-kubeconfig --cluster-id "$OCI_CLUSTER_ID" --file $HOME/.kube/config --region "$OCI_REGION" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
 
       - name: Configure Kubernetes context
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
+          if [ -z "$KUBECONFIG_B64" ]; then
+            echo "Kubeconfig is missing. Exiting."
+            exit 1
+          fi
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
-
-      - name: Apply Kubernetes deployment from YAML file
-        run: |
+          echo "$KUBECONFIG_B64" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
           export KUBECONFIG=~/.kube/config
-          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml  
 
-    
+      - name: Verify Kubernetes connection
+        run: |
+          kubectl cluster-info || { echo "Kubernetes cluster connection failed"; exit 1; }
+          kubectl get nodes || { echo "Failed to fetch Kubernetes nodes"; exit 1; }
+
+      - name: Apply Kubernetes deployment
+        run: |
+          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
+          kubectl rollout status deployment/car-rental -n default || { echo "Deployment rollout failed"; exit 1; }
