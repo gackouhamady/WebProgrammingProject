@@ -91,7 +91,7 @@ jobs:
           echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> ~/.oci/config
           echo "key_file=$(echo ${OCI_CLI_KEY_FILE} | base64 --decode)" > ~/.oci/oci_api_key.pem
           echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
-          echo "tenancy=${OCI_CLI_TENANCY}" >> ~/.oci/config
+          echo "tenancy=ocid1.tenancy.oc1..aaaaaaaaxarhlhius4klogc5fnv27otyaepayeawp63h5zrnutsuc7yf3ydq" >> ~/.oci/config
           echo "region=eu-paris-1" >> ~/.oci/config
           chmod 600 ~/.oci/config
 
@@ -123,9 +123,3 @@ jobs:
         run: |
           kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
           kubectl rollout status deployment/car-rental -n default || { echo "Deployment rollout failed"; exit 1; }
-          
-          
-          
-          
-          
-# End  fix
