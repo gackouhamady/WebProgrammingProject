@@ -68,8 +68,17 @@ jobs:
           echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
           source $GITHUB_ENV
 
+
+      - name: Forcer l'ajout d'OCI CLI au PATH
+        run: echo "export PATH=$HOME/bin:$PATH" >> ~/.bashrc
+
+
       - name: Vérifier OCI CLI
-        run: oci --version
+        run: |
+          ls -lah $HOME/bin/
+          echo "Chemin actuel : $PATH"
+          which oci
+          oci --version
 
       - name: Configure OCI CLI for Kubernetes access
         env:
