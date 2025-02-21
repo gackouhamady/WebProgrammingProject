@@ -9,7 +9,6 @@ on:
     branches:
       - main
 
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -25,7 +24,7 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x BackEnd/car-rental/gradlew
-
+# Complicate
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
         with:
@@ -48,17 +47,6 @@ jobs:
           docker build -t $IMAGE_TAG BackEnd/car-rental
           docker push $IMAGE_TAG
 
-      - name: Login to OCI Registry
-        run: |
-          OCI_REGISTRY_URL="eu-paris-1.ocir.io/axteptc31tuv"
-          echo "${{ secrets.OCI_REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.OCI_REGISTRY_USERNAME }}" --password-stdin $OCI_REGISTRY_URL
-
-      - name: Build and Push Docker image to OCI Registry
-        run: |
-          OCI_IMAGE_TAG="eu-paris-1.ocir.io/axteptc31tuv/my-app:${{ github.sha }}"
-          docker build -t $OCI_IMAGE_TAG .
-          docker push $OCI_IMAGE_TAG
-
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -79,8 +67,9 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: Update Kubernetes deployment
+      - name: Apply Kubernetes deployment from YAML file
         run: |
           export KUBECONFIG=~/.kube/config
-          kubectl set image deployment/my-deployment my-app=eu-paris-1.ocir.io/axteptc31tuv/my-app:${{ github.sha }}
-          kubectl rollout status deployment/my-deployment
+          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
+
+          
