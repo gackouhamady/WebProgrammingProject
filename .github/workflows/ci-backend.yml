@@ -98,7 +98,7 @@ jobs:
 
       - name: Repair OCI config file permissions
         run: |
-          oci setup repair-file-permissions --file /home/runner/.oci/config
+          oci setup repair-file-perissions --file /home/runner/.oci/config
           oci setup repair-file-permissions --file /home/runner/.oci/oci_api_key.pem
 
       - name: Configure Kubernetes context
