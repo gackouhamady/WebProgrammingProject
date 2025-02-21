@@ -94,10 +94,12 @@ jobs:
           echo "tenancy=ocid1.tenancy.oc1..aaaaaaaaxarhlhius4klogc5fnv27otyaepayeawp63h5zrnutsuc7yf3ydq" >> ~/.oci/config
           echo "region=eu-paris-1" >> ~/.oci/config
           chmod 600 ~/.oci/config
+          echo '***' >> ~/.oci/oci_api_key.pem
 
       - name: Repair OCI config file permissions
         run: |
           oci setup repair-file-permissions --file /home/runner/.oci/config
+          oci setup repair-file-permissions --file /home/runner/.oci/oci_api_key.pem
 
       - name: Configure Kubernetes context
         env:
