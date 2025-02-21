@@ -67,7 +67,7 @@ jobs:
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
           echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
           source $GITHUB_ENV
-# Fix ok
+
       - name: Ajouter OCI CLI au PATH
         run: echo "$HOME/bin" >> $GITHUB_PATH
 
@@ -89,7 +89,8 @@ jobs:
           echo "[DEFAULT]" > ~/.oci/config
           echo "user=${OCI_CLI_USER}" >> ~/.oci/config
           echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> ~/.oci/config
-          echo "key_file=$(echo ${OCI_CLI_KEY_FILE} | base64 --decode)" >> ~/.oci/config
+          echo "key_file=$(echo ${OCI_CLI_KEY_FILE} | base64 --decode)" > ~/.oci/oci_api_key.pem
+          echo "key_file=~/.oci/oci_api_key.pem" >> ~/.oci/config
           echo "tenancy=${OCI_CLI_TENANCY}" >> ~/.oci/config
           echo "region=eu-paris-1" >> ~/.oci/config
           chmod 600 ~/.oci/config
@@ -122,3 +123,9 @@ jobs:
         run: |
           kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
           kubectl rollout status deployment/car-rental -n default || { echo "Deployment rollout failed"; exit 1; }
+          
+          
+          
+          
+          
+          
