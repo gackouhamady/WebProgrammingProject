@@ -54,6 +54,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up OCI CLI
+        run: |
+          # Installer OCI CLI
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
+          echo "OCI CLI installed"
+          # Ajouter OCI CLI au PATH
+          echo "export PATH=$PATH:$HOME/oci-cli/bin" >> $GITHUB_ENV
+
+      - name: Configure OCI CLI
+        run: |
+          mkdir -p ~/.oci
+          echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config  # Assure-toi que les clés API et autres infos sont présentes dans les secrets GitHub
+
       - name: Configure Kubernetes context
         run: |
           mkdir -p ~/.kube
@@ -62,8 +75,6 @@ jobs:
       - name: Apply Kubernetes deployment from YAML file
         run: |
           export KUBECONFIG=~/.kube/config
-          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml --validate=false
+          kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml  
 
-      
-
-          
+    
