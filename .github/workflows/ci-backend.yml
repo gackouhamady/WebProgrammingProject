@@ -78,54 +78,9 @@ jobs:
           which oci
           oci --version
 
-      - name: Configure OCI CLI for Kubernetes access
-        env:
-          OCI_CLUSTER_ID: ${{ secrets.OCI_CLUSTER_ID }}  # Identifiant du cluster
-          OCI_API_KEY: ${{ secrets.OCI_API_KEY }}  # Clé API pour l'authentification OCI
-          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}  # OCID du tenancy
-          OCI_REGION: "eu-paris-1"  # Région OCI (à ajuster si nécessaire)
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}  # Le fichier kube config du cluster
-        run: |
-          # Vérifiez si les variables sont définies
-          if [ -z "$OCI_CLUSTER_ID" ] || [ -z "$OCI_API_KEY" ] || [ -z "$OCI_TENANCY_OCID" ]; then
-            echo "Une ou plusieurs variables OCI manquent. Exiting."
-            exit 1
-          fi
-      
-          # Créer le répertoire OCI si nécessaire
-          mkdir -p ~/.oci
-      
-          # Créer le fichier de configuration OCI (~/.oci/config) avec les variables d'environnement
-          echo "[DEFAULT]" > ~/.oci/config
-          echo "user=$OCI_TENANCY_OCID" >> ~/.oci/config
-          echo "fingerprint=$(echo $OCI_API_KEY | base64 -d)" >> ~/.oci/config  # Assurez-vous que la clé est base64-encoded si nécessaire
-          echo "key_file=$OCI_API_KEY" >> ~/.oci/config
-          echo "tenancy=$OCI_TENANCY_OCID" >> ~/.oci/config
-          echo "region=$OCI_REGION" >> ~/.oci/config
-      
-          # Si vous avez un fichier kube config secret, l'écrire dans ~/.kube/config
-          mkdir -p ~/.kube
-          echo "$KUBECONFIG" > ~/.kube/config
-      
-          # Vérifiez si le fichier kube/config existe
-          if [ ! -f ~/.kube/config ]; then
-            echo "Le fichier kube/config est manquant. Exiting."
-            exit 1
-          fi
-      
-          # Créer le kubeconfig avec l'OCI CLI pour accéder au cluster Kubernetes
-          oci ce cluster create-kubeconfig --cluster-id "$OCI_CLUSTER_ID" --file $HOME/.kube/config --region "$OCI_REGION" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-      
-          echo "Configuration OCI terminée avec succès."
-    
-    
-    
-    
-    
-    
-    
-    
-    
+       
+       
+
       - name: Configure Kubernetes context
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
