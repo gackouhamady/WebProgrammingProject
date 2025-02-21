@@ -24,7 +24,7 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x BackEnd/car-rental/gradlew
-# Complicate
+
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
         with:
@@ -54,14 +54,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup OCI CLI
-        uses: oracle/oci-cli-action@v1
-        with:
-          oci_api_key: ${{ secrets.OCI_API_KEY }}
-          oci_user_ocid: ${{ secrets.OCI_USER_OCID }}
-          oci_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
-          oci_region: ${{ secrets.OCI_REGION }}
-
       - name: Configure Kubernetes context
         run: |
           mkdir -p ~/.kube
@@ -71,5 +63,6 @@ jobs:
         run: |
           export KUBECONFIG=~/.kube/config
           kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
+      
 
           
