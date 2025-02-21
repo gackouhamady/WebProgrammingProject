@@ -56,10 +56,11 @@ jobs:
 
       - name: Install OCI CLI
         run: |
-          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
-          source $HOME/.bashrc
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+          echo "source $HOME/.bashrc" >> $GITHUB_ENV
+      
 
-# curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
+      # curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
       #          echo "source \$HOME/.bashrc" >> $GITHUB_ENV
 
       - name: Configure OCI CLI for Kubernetes access
