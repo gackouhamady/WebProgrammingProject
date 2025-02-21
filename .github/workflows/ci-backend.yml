@@ -55,7 +55,6 @@ jobs:
           docker build -t $IMAGE_TAG BackEnd/car-rental
           docker push $IMAGE_TAG
 
-
   deploy:
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -66,8 +65,8 @@ jobs:
       - name: Install OCI CLI
         run: |
           curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
-          echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_PATH
-          source $GITHUB_PATH
+          echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
+          source $GITHUB_ENV
 
       - name: Ajouter OCI CLI au PATH
         run: echo "$HOME/bin" >> $GITHUB_PATH
@@ -79,30 +78,27 @@ jobs:
           which oci
           oci --version
 
-      - name: Configurer le kubeconfig d'OCI
+      - name: Configure Kubernetes context
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
         run: |
-          if [ -z "$OCI_CLI_CONFIG" ]; then
-            echo "OCI CLI config is missing. Exiting."
+          if [ -z "$KUBECONFIG_B64" ]; then
+            echo "Kubeconfig is missing. Exiting."
             exit 1
           fi
-          mkdir -p $HOME/.kube
-          # Remplacez cette commande avec les détails de votre cluster
-          oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.eu-paris-1.aaaaaaaant6pqv73eslioidw2ccdw25d7za25t3rlieot3ggvc3ibmeixkha \
-            --file $HOME/.kube/config \
-            --region eu-paris-1 \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_B64" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
+          export KUBECONFIG=~/.kube/config
 
-          # Définir la variable d'environnement KUBECONFIG
-          export KUBECONFIG=$HOME/.kube/config
-          echo "export KUBECONFIG=$HOME/.kube/config" >> $GITHUB_PATH
-
-      - name: Vérifier la connexion Kubernetes
+      - name: Connect to OCI and configure Kubernetes
         run: |
-          echo "Vérification de la connexion Kubernetes..."
-          kubectl cluster-info
+          oci -v
+          mkdir -p $HOME/.kube
+          oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.eu-paris-1.aaaaaaaant6pqv73eslioidw2ccdw25d7za25t3rlieot3ggvc3ibmeixkha --file $HOME/.kube/config --region eu-paris-1 --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+          export KUBECONFIG=$HOME/.kube/config
 
-      - name: Appliquer la configuration Kubernetes
+      - name: Apply Kubernetes deployment
         run: |
           kubectl apply -f ./BackEnd/k8s/car-rental-deployement.yml
           kubectl rollout status deployment/car-rental -n default || { echo "Deployment rollout failed"; exit 1; }
