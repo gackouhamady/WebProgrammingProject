@@ -68,10 +68,6 @@ jobs:
           echo "export PATH=\$HOME/bin:\$PATH" >> $GITHUB_ENV
           source $GITHUB_ENV
 
-
-      - name: Forcer l'ajout d'OCI CLI au PATH
-        run: echo "export PATH=$HOME/bin:$PATH" >> ~/.bashrc
-
       - name: Ajouter OCI CLI au PATH
         run: echo "$HOME/bin" >> $GITHUB_PATH
 
@@ -81,6 +77,7 @@ jobs:
           ls -lah $HOME/bin/
           which oci
           oci --version
+      
       
       
 
@@ -94,8 +91,18 @@ jobs:
             exit 1
           fi
           mkdir -p ~/.oci
+          # Vérifier si le fichier de config OCI existe
+          if [ ! -f ~/.oci/config ]; then
+            echo "OCI config file is missing. Creating new one."
+            oci setup config --profile DEFAULT --region "$OCI_REGION"
+          fi
           oci ce cluster create-kubeconfig --cluster-id "$OCI_CLUSTER_ID" --file $HOME/.kube/config --region "$OCI_REGION" --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-
+          
+    
+    
+    
+    
+    
       - name: Configure Kubernetes context
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG }}
