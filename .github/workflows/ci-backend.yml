@@ -65,9 +65,9 @@ jobs:
 
       - name: Configure OCI CLI for Kubernetes access
         run: |
-          mkdir -p $HOME/.kube
+          oci -v
           oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.eu-paris-1.aaaaaaaant6pqv73eslioidw2ccdw25d7za25t3rlieot3ggvc3ibmeixkha --file $HOME/.kube/config --region eu-paris-1 --token-version 2.0.0  --kube-endpoint PUBLIC_ENDPOINT
-          export KUBECONFIG=$HOME/.kube/config
+          
 
 
 
