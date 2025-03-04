@@ -80,28 +80,28 @@ Le frontend (Angular) interagit avec le backend (Spring Boot) via des API REST e
 ## Structure du Projet
 
 ### Backend
-backend/
-├── user-service/
-├── car-service/
-├── booking-service/
-├── payment-service/
-├── api-gateway/
-├── docker/
-├── kubernetes/
-└── terraform/
+   backend/
+   ├── user-service/
+   ├── car-service/
+   ├── booking-service/
+   ├── payment-service/
+   ├── api-gateway/
+   ├── docker/
+   ├── kubernetes/
+   └── terraform/
 
 
 ### Frontend
-frontend/
-├── src/
-│ ├── app/
-│ │ ├── components/
-│ │ ├── services/
-│ │ ├── models/
-│ │ └── pages/
-│ ├── assets/
-│ └── environments/
-└── angular.json
+   frontend/
+   ├── src/
+   │ ├── app/
+   │ │ ├── components/
+   │ │ ├── services/
+   │ │ ├── models/
+   │ │ └── pages/
+   │ ├── assets/
+   │ └── environments/
+   └── angular.json
 
 
 ---
