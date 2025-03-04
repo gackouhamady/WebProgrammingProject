@@ -1,74 +1,113 @@
 # Projet Car-Rental
 
 ## Description du Projet
-Le projet **Car-Rental** est une application de location de voitures en ligne qui permet aux utilisateurs de rechercher, réserver et payer des voitures de manière simple et sécurisée. L'application est basée sur une architecture microservices, déployée dans un environnement cloud, et utilise des technologies modernes pour assurer scalabilité, performance et sécurité.
+Le projet **Car-Rental** est une application de location de voitures en ligne qui permet aux utilisateurs de rechercher, réserver et payer des voitures de manière simple et sécurisée. L'application est divisée en deux parties principales :
+- **Backend** : Développé avec Java Spring Boot, il expose des API REST pour gérer les utilisateurs, les voitures, les réservations et les paiements.
+- **Frontend** : Développé avec Angular, il fournit une interface utilisateur intuitive pour interagir avec les fonctionnalités du backend.
+
+L'application est basée sur une architecture microservices, déployée dans un environnement cloud, et utilise des technologies modernes pour assurer scalabilité, performance et sécurité.
+
+---
 
 ## Architecture du Projet
-L'application est divisée en plusieurs microservices, chacun ayant une responsabilité spécifique. Voici un aperçu de l'architecture :
 
 ### Diagramme d'Architecture
 ![Architecture Car-Rental](architecture_car_rental.png)
 
 ### Composants Principaux
-1. **Client** : L'interface utilisateur (navigateur web ou application mobile) interagit avec l'application via des API REST.
-2. **API Gateway** : Un point d'entrée unique pour toutes les requêtes, qui les route vers les microservices appropriés.
-3. **Microservices** :
+#### Backend
+1. **API Gateway** : Un point d'entrée unique pour toutes les requêtes, qui les route vers les microservices appropriés.
+2. **Microservices** :
    - **User Service** : Gère l'authentification et les informations des utilisateurs.
    - **Car Service** : Gère le catalogue des voitures disponibles.
    - **Booking Service** : Gère les réservations de voitures.
    - **Payment Service** : Gère les transactions de paiement.
-4. **Base de Données** : Une base de données relationnelle (MySQL ou PostgreSQL) stocke les données des utilisateurs, des voitures et des réservations.
-5. **Cluster Kubernetes** : Les microservices sont déployés dans un cluster Kubernetes hébergé sur Google Kubernetes Engine (GKE).
-6. **Service Mesh (Istio)** : Facultatif, pour la gestion de la communication sécurisée entre les services.
-7. **Terraform** : Automatise le déploiement de l'infrastructure sur GCP.
+3. **Base de Données** : Une base de données relationnelle (MySQL ou PostgreSQL) stocke les données des utilisateurs, des voitures et des réservations.
+4. **Cluster Kubernetes** : Les microservices sont déployés dans un cluster Kubernetes hébergé sur Google Kubernetes Engine (GKE).
+5. **Service Mesh (Istio)** : Facultatif, pour la gestion de la communication sécurisée entre les services.
+6. **Terraform** : Automatise le déploiement de l'infrastructure sur GCP.
+
+#### Frontend
+1. **Angular Application** : Une application web moderne qui interagit avec le backend via des API REST.
+   - **Pages Principales** :
+     - Page d'accueil : Affichage des voitures disponibles.
+     - Page de connexion/inscription : Gestion de l'authentification.
+     - Page de réservation : Réservation d'une voiture.
+     - Page de paiement : Gestion des transactions.
+   - **Services Angular** : Des services Angular sont utilisés pour communiquer avec le backend (par exemple, `UserService`, `CarService`, `BookingService`).
+
+---
 
 ## Technologies Utilisées
-### Développement
+
+### Backend
 - **Java Spring Boot** : Framework pour développer les microservices REST.
 - **Spring Cloud Gateway** : Pour implémenter l'API Gateway.
 - **Docker** : Pour conteneuriser les microservices.
 - **Kubernetes** : Pour orchestrer les conteneurs et gérer le cluster.
 - **Terraform** : Pour l'automatisation de l'infrastructure.
-
-### Infrastructure
 - **Google Cloud Platform (GCP)** :
   - **Google Kubernetes Engine (GKE)** : Pour héberger le cluster Kubernetes.
   - **Cloud SQL** : Pour la base de données MySQL/PostgreSQL.
   - **Cloud Storage** : Optionnel, pour stocker des fichiers (par exemple, des images de voitures).
 - **Service Mesh (Istio)** : Pour la communication sécurisée entre les services.
 
-### Sécurité
-- **RBAC (Role-Based Access Control)** : Pour gérer les permissions dans Kubernetes.
-- **mTLS (Mutual TLS)** : Pour chiffrer la communication entre les services.
-- **Docker Content Trust** : Pour signer et vérifier les images Docker.
+### Frontend
+- **Angular** : Framework pour développer l'interface utilisateur.
+- **Angular Material** : Pour des composants UI modernes et réactifs.
+- **RxJS** : Pour la gestion des flux de données asynchrones.
+- **HTTPClient** : Pour communiquer avec les API du backend.
 
-## Étapes Initiales du Projet
-1. **Configuration de l'Environnement** :
-   - Installation des outils : Docker, Kubernetes (Minikube pour le développement local), Terraform, et les SDK GCP.
-   - Création d'un projet sur GCP et activation des API nécessaires (GKE, Cloud SQL, etc.).
-2. **Développement du Premier Microservice** :
-   - Développement d'un microservice Spring Boot pour gérer l'authentification et les utilisateurs.
-   - Dockerisation et publication de l'image Docker sur Google Container Registry (GCR).
-3. **Déploiement Local avec Kubernetes** :
-   - Création d'un cluster local avec Minikube.
-   - Déploiement du User Service dans le cluster.
-4. **Automatisation avec Terraform** :
-   - Configuration de Terraform pour déployer l'infrastructure sur GCP (GKE, Cloud SQL).
-   - Déploiement initial avec Terraform.
+---
 
-## Prochaines Étapes
-1. **Développement des Autres Microservices** :
-   - Car Service, Booking Service, et Payment Service.
-2. **Intégration de l'API Gateway** :
-   - Configuration de Spring Cloud Gateway pour router les requêtes.
-3. **Ajout d'un Service Mesh** :
-   - Configuration d'Istio pour la communication sécurisée entre les services.
-4. **Déploiement dans le Cloud** :
-   - Déploiement de l'application sur GCP avec Terraform.
-5. **Tests et Validation** :
-   - Tests fonctionnels, tests de performance, et validation de la sécurité.
+## Interaction entre Backend et Frontend
+Le frontend (Angular) interagit avec le backend (Spring Boot) via des API REST exposées par l'API Gateway. Voici un exemple de flux typique :
+1. **Recherche de Voitures** :
+   - Le frontend envoie une requête GET à l'API Gateway (`/api/cars`).
+   - L'API Gateway route la requête vers le **Car Service**.
+   - Le **Car Service** renvoie la liste des voitures disponibles.
+2. **Réservation d'une Voiture** :
+   - Le frontend envoie une requête POST à l'API Gateway (`/api/bookings`).
+   - L'API Gateway route la requête vers le **Booking Service**.
+   - Le **Booking Service** crée la réservation et renvoie un accusé de réception.
+3. **Paiement** :
+   - Le frontend envoie une requête POST à l'API Gateway (`/api/payments`).
+   - L'API Gateway route la requête vers le **Payment Service**.
+   - Le **Payment Service** traite le paiement et renvoie un statut de succès ou d'échec.
+
+---
+
+## Structure du Projet
+
+### Backend
+backend/
+├── user-service/
+├── car-service/
+├── booking-service/
+├── payment-service/
+├── api-gateway/
+├── docker/
+├── kubernetes/
+└── terraform/
+
+
+### Frontend
+frontend/
+├── src/
+│ ├── app/
+│ │ ├── components/
+│ │ ├── services/
+│ │ ├── models/
+│ │ └── pages/
+│ ├── assets/
+│ └── environments/
+└── angular.json
+
+
+---
 
 ## Comment Contribuer
-1. Clonez le dépôt :
+Clonez le dépôt :
    ```bash
-   git clone https://github.com/gackouhamady/WebProgrammingProject.git
+   git clone https://github.com/votre-utilisateur/car-rental.git
+ 
