@@ -14,6 +14,47 @@ L'application est basée sur une architecture microservices, déployée dans un 
 ### Diagramme d'Architecture
 ![Architecture Car-Rental](architecture_car_rental.png)
 
+### Schema d'architecture pour exposer  les services 
+
+                             [ Clients externes ]
+                                    │
+                                    ▼
+      ┌─────────────────────────────────────────────┐
+      │          LoadBalancer Service (Cloud)       │
+      │  (Exposé via un Load Balancer externe)      │
+      └─────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                        ┌───────────────────┐
+                        │   NodePort Service │  (Exposé sur chaque nœud à un port spécifique)
+                        └───────────────────┘
+                                    │
+          ┌───────────────────────────────────────────┐
+          │    Accès possible depuis l'extérieur      │
+          │       via NodeIP:NodePort                 │
+          └───────────────────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌─────────────────────────┐
+                     │     ClusterIP Service   │  (Par défaut, accessible uniquement dans le cluster)
+                     └─────────────────────────┘
+                                    │
+                                    ▼
+           ┌───────────────────────────────────────┐
+           │           Kubernetes Cluster          │
+           │ ┌─────────────────────────────────┐  │
+           │ │         Application Pods        │  │
+           │ │   (Exécutant l’application)     │  │
+           │ └─────────────────────────────────┘  │
+           └───────────────────────────────────────┘
+
+               ExternalName Service
+   (Crée un alias DNS pour un service externe,
+    ex: foo.bar.example.com)
+
+
+
+
 ### Composants Principaux
 #### Backend
 1. **API Gateway** : Un point d'entrée unique pour toutes les requêtes, qui les route vers les microservices appropriés.
