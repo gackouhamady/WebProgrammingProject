@@ -61,7 +61,7 @@ L'application est basée sur une architecture microservices, déployée dans un 
    - **Car Service** : Gère le catalogue des voitures disponibles.
    - **Booking Service** : Gère les réservations de voitures.
    - **Payment Service** : Gère les transactions de paiement.
-3. **Base de Données** : Une base de données relationnelle (MySQL ou PostgreSQL) stocke les données des utilisateurs, des voitures et des réservations.
+3. **Base de Données** : Une base de données relationnelle (MySQL) stocke les données des utilisateurs, des voitures et des réservations.
 4. **Cluster Kubernetes** : Les microservices sont déployés dans un cluster Kubernetes hébergé sur Google Kubernetes Engine (GKE).
 5. **Service Mesh (Istio)** : Facultatif, pour la gestion de la communication sécurisée entre les services.
 6. **Terraform** : Automatise le déploiement de l'infrastructure sur GCP.
