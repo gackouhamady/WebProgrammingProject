@@ -48,9 +48,7 @@ L'application est basée sur une architecture microservices, déployée dans un 
            │ └─────────────────────────────────┘  │
            └───────────────────────────────────────┘
 
-               ExternalName Service
-   (Crée un alias DNS pour un service externe,
-    ex: foo.bar.example.com)
+               ExternalName Service : Crée un alias DNS pour un service externe,  ex: foo.bar.example.com
 
 
 
