@@ -1,7 +1,7 @@
 # Projet Car-Rental
 
 ## Description du Projet
-Le projet **Car-Rental** est une application de location de voitures en ligne qui permet aux utilisateurs de rechercher, réserver et payer des voitures de manière simple et sécurisée. L'application est divisée en deux parties principales :
+Le projet **Car-Rental** est une application de location de voitures qui permet aux utilisateurs de rechercher, réserver et payer des voitures de manière simple et sécurisée. L'application est divisée en deux parties principales :
 - **Backend** : Développé avec Java Spring Boot, il expose des API REST pour gérer les utilisateurs, les voitures, les réservations et les paiements.
 - **Frontend** : Développé avec Angular, il fournit une interface utilisateur intuitive pour interagir avec les fonctionnalités du backend.
 
